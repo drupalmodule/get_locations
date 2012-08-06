@@ -1,0 +1,143 @@
+/*custom js file for geocoding.
+optimized usage of geocoding*/
+
+(function ($) {
+
+Drupal.behaviors.proxycalculator = {
+ attach: function(context, settings) {
+  new_add = 'thank you';//just some initial values.
+  old_add = '';
+  test = 0;
+  var pathname = window.location.pathname;
+
+  var uiref1= document.getElementById('edit-proxydistance-postal-code');
+  var autocomplete = new google.maps.places.Autocomplete(uiref1);
+  
+  $("#edit-proxydistance-postal-code").each(function() {
+    // Save current value of element
+    $(this).data('oldVal', $(this).val());
+    // Look for changes in the value
+    $(this).bind("propertychange keyup", function(e) {
+       if(e.which == 38 || e.which == 40){
+       // If value has changed...
+       if ($(this).data('oldVal') != $(this).val()) {
+       // Updated stored value
+        getgeocode(); 
+        window.new_add = $(this).val();
+        $(this).data('oldVal', $(this).val());
+           
+      }
+  
+   window.new_add = $(this).val();
+  
+     }
+  }); //end of bind for keyup. 
+
+//geocode if user tries to hit the enter from the address bar itself
+
+   $(this).bind("click", function(){
+        //If value has changed...
+        if (window.new_add != $(this).val() && $(this).val() != '') {
+        // Updated stored value
+        getgeocode();
+        window.new_add = $(this).val();
+        $(this).data('oldVal', $(this).val());
+
+     }
+
+  }); //end of bind for click.
+
+ }); //end of the each loop.
+
+ // the check and geocoding for change in address at distance.   
+ $("#edit-proxydistance-search-distance").bind("click", function(event){
+      // If value has changed...
+       // Updated stored value
+   if(window.new_add != $("#edit-proxydistance-postal-code").val() && $("#edit-proxydistance-postal-code").val() != '')              
+      {
+         getgeocode();
+         window.old_add = window.new_add;
+         window.new_add = $("#edit-proxydistance-postal-code").val();
+      }
+
+ });
+
+ //
+ $("#edit-submit-proxy").mouseenter(function(){
+
+      if(window.new_add != $("#edit-proxydistance-postal-code").val() && $("#edit-proxydistance-postal-code").val() != '' ){
+         getgeocode();
+         window.old_add = window.new_add;
+         window.new_add = $("#edit-proxydistance-postal-code").val();
+      }
+
+ });
+
+ function getgeocode() {
+      window.test++; // counter for geocode. 
+      $("#"+"edit-proxydistance-test").val(window.test); // putting back the geocode counter.
+      var input_adrs_arr = [];
+        
+      var streetfield_value = $("#edit-proxydistance-postal-code").val();
+     
+      if (streetfield_value){
+       input_adrs_arr.push(streetfield_value);
+       // alert(streetfield_value);
+                }
+      else{
+       //  alert('PLease enter an address to find a therapist');
+                }
+
+
+      var additionalfield_value = '';
+
+      input_adrs_arr.push(additionalfield_value);
+
+      var cityfield_value = '';
+
+      input_adrs_arr.push(cityfield_value);
+
+      var provincefield_value = '';
+
+      input_adrs_arr.push(provincefield_value);
+
+      var postal_codefield_value = '';
+
+      input_adrs_arr.push(postal_codefield_value);
+
+      var countryfield_value = 'US';
+        
+      input_adrs_arr.push(countryfield_value);
+
+      var input_adrstmp = input_adrs_arr.join(", ");
+
+      var input_adrs = {'address': input_adrstmp};
+
+      var geocoder = new google.maps.Geocoder();
+        
+      geocoder.geocode(input_adrs, function (results, status) {
+             if (status == google.maps.GeocoderStatus.OK) {
+
+              lat = results[0].geometry.location.lat(); // lat being calculated retrieved
+              //  alert(lat);
+              $("#" + "edit-proxydistance-lati").val(lat);
+              lng = results[0].geometry.location.lng(); // // long being calculated retrieved
+              //  alert(lng);
+              $("#" + "edit-proxydistance-long").val(lng);
+
+               }
+
+             else {
+              var prm = {'!a': input_adrstmp, '!b': getGeoErrCode(status) };
+              var msg = Drupal.t('Geocode for (!a) was not successful for the following reason: !b', prm);
+              alert(msg);
+               }
+        }); //geocoder for zipcode is closed.
+
+    } //closing function getgeocode
+
+  }
+ }
+
+})(jQuery);
+
